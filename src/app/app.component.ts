@@ -1,41 +1,44 @@
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from './auth.service';
+import { EventEmiterService } from './event-emiter.service';
+import { LocalStorageService } from './local-storage.service';
+import { User } from './model/user';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit{
-  
-  title = 'my-app';
-  isAuthenticated: boolean;
+export class AppComponent implements OnInit {
 
-  constructor(private router: Router) {
+  title = 'my-app';
+  isAuthenticated: boolean = false;
+  currentUser: User;
+
+  constructor(private router: Router, private eventservice: EventEmiterService, private localStorageService: LocalStorageService, private http: HttpClient) {
+
     debugger
+    this.eventservice.changeEmitted$.subscribe(
+      user => {
+        debugger
+        this.currentUser = user;
+        this.isAuthenticated = user.isValid;
+        this.router.navigate(['home']);
+        alert('received..');
+      });
+
+    if (!this.isAuthenticated) this.logout();
+
   }
   ngOnInit(): void {
-   
   }
 
   logout() {
     this.isAuthenticated = false;
+    this.localStorageService.clearSession();
     this.router.navigate(['login'])
   }
-
-  onActivate(componentReference) {
-    console.log(componentReference)
-    debugger
-    if (!componentReference.searchItem) return;
-    // componentReference.anyFunction();
-    //Below will subscribe to the searchItem emitter
-    componentReference.searchItem.subscribe((data) => {
-      if (data) {
-        this.isAuthenticated = data;
-        this.router.navigate(['home']);
-      }
-    })
- }
 
 }
